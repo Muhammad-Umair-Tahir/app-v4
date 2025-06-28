@@ -17,7 +17,7 @@ class VisualizerAgent(Agent):
         super().__init__(
             name="VisualizerAgent",
             agent_id="visualizer_agent",
-            model=Gemini(id=os.getenv("GOOGLE_MODEL")),
+            model=Gemini(id=os.getenv("GEMINI_MODEL", "gemini-2.5-flash")),
             memory=shared_memory(),
             storage=shared_storage(),
             description="This agent visualizes data and generates images based on the provided information.",
@@ -77,19 +77,16 @@ class VisualizerAgent(Agent):
             """
             )
     
-    def visualize(self, text, data, user_id: str = None, session_id: str = None) -> Iterator[RunResponseEvent]:
+    def visualize(self, text: str = None, file_path: str = None, user_id: str = None, session_id: str = None) -> Iterator[RunResponseEvent]:
         # Placeholder for visualization logic
-        print(f"[DEBUG]: Visualizing data: {data}")
-        if not text:
-            return self.run("Visualize the provided data in depth and return your analysis as instructed", 
-                                                        images=[Image(filepath=data)], user_id=user_id, session_id=session_id, stream=True)
-        else:
-            return self.run(text, user_id=user_id, session_id=session_id, stream=True)
-            # Here you would implement the actual visualization logic, e.g., using matplotlib or seaborn
-            pprint_run_response(response, markdown=True)
-    
-    
-    
+        print(f"[DEBUG]: Visualizing data - text: {text}, file_path: {file_path}")
+
+        if file_path:
+            # If file path is provided, read the file and create Image from path
+            print(f"[DEBUG]: Using file path: {file_path}")
+            return self.run("Analyze the provided image file in depth and return your analysis as instructed", 
+                           images=[Image(filepath=file_path)], user_id=user_id, session_id=session_id, detail="auto", stream=True)
+            
     
     
     

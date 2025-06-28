@@ -1,20 +1,23 @@
 import os
 from agno.memory.v2 import Memory
-from agno.memory.v2.db.sqlite import SqliteMemoryDb
-from agno.storage.sqlite import SqliteStorage
+from agno.memory.v2.db.mongodb import MongoMemoryDb
+from agno.storage.mongodb import MongoDbStorage
 from agno.models.google import Gemini
 import uuid
 import json
 from agno.workflow import WorkflowRunResponseEvent
 from typing import Iterator
+import dotenv
+
+dotenv.load_dotenv()
 
 def shared_memory():
     
-    memory = Memory(db=SqliteMemoryDb( table_name="shared_memories", db_file=os.getenv("MEMORY_DB_FILE")), model=Gemini(os.getenv("GOOGLE_MODEL")))
+    memory = Memory(db=MongoMemoryDb( collection_name="shared_memories", db_url=os.getenv("MONGO_URI", "mongodb+srv://htahir861:DevF4e28db5%40@devcluster.zou3amg.mongodb.net/?retryWrites=true&w=majority&appName=DevCluster"), db_name="agno"), model=Gemini(os.getenv("GEMINI_MODEL", "gemini-2.5-flash")),)
     return memory
 
 def shared_storage():
-    return SqliteStorage(table_name="shared_storage", db_file=os.getenv("STORAGE_DB_FILE"))
+    return MongoDbStorage(collection_name="shared_storage", db_url=os.getenv("MONGO_URI", "mongodb+srv://htahir861:DevF4e28db5%40@devcluster.zou3amg.mongodb.net/?retryWrites=true&w=majority&appName=DevCluster"), db_name="agno")
 
 def generate_user_id():
     """

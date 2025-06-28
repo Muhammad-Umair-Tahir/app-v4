@@ -96,7 +96,7 @@ class InterviewAgent(Agent):
         super().__init__(
             name="InterviewAgent",
             agent_id="interview_agent",
-            model=Gemini(id=os.getenv("GOOGLE_MODEL")),
+            model=Gemini(id=os.getenv("GEMINI_MODEL", "gemini-2.5-flash")),
             memory=shared_memory(),
             storage=shared_storage(),
             description="Interview agent interacts with clients to gather detailed architectural design requirements, including building type, number of floors, layout preferences, and MEP needs. It serves as the first step in guiding the design-to-BOQ process.",

@@ -1,1 +1,7 @@
 .env
+__pycache__
+app.py
+index.html
+routers
+data
+uploads

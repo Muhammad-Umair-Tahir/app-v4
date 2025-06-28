@@ -23,7 +23,7 @@ class BOQAgent(Agent):
         super().__init__(
             name="BOQAgent",
             agent_id="boq_agent",
-            model=Gemini(id=os.getenv("GOOGLE_MODEL")),
+            model=Gemini(id=os.getenv("GEMINI_MODEL")),
             memory=shared_memory(),
             storage=shared_storage(),
             description="Interview agent interacts with clients to gather detailed architectural design requirements, including building type, number of floors, layout preferences, and MEP needs. It serves as the first step in guiding the design-to-BOQ process.",
