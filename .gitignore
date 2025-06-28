@@ -1,6 +1,6 @@
 .env
 __pycache__
-app.py
+# app.py  # Commented out to track Streamlit reference
 index.html
 routers
 data

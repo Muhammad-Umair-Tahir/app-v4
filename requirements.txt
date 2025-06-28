@@ -10,3 +10,4 @@ httpx
 requests
 google-genai
 sqlalchemy
+pymongo
