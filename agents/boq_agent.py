@@ -4,6 +4,7 @@ from agno.utils.pprint import pprint_run_response
 import os
 import dotenv
 from typing import Iterator
+import asyncio
 from utility.utils import shared_memory, shared_storage
 
 dotenv.load_dotenv()
@@ -26,22 +27,21 @@ class BOQAgent(Agent):
             model=Gemini(id=os.getenv("GEMINI_MODEL")),
             memory=shared_memory(),
             storage=shared_storage(),
-            description="Interview agent interacts with clients to gather detailed architectural design requirements, including building type, number of floors, layout preferences, and MEP needs. It serves as the first step in guiding the design-to-BOQ process.",
+            description="BOQ agent generates detailed Bill of Quantities for construction projects based on architectural drawings, specifications, and project data. It follows industry standards for quantity surveying.",
             instructions=BOQ_AGENT_INSTRUCTIONS,
-            # user_id="user_123",
-            # session_id="session_123",
+            
             # CHAT HISTORY CONFIG
             add_history_to_messages=True,
-            num_history_runs= 5,
-            read_chat_history= True,
+            num_history_runs=5,
+            read_chat_history=True,
             
             # MEMORY CONFIG
             enable_agentic_memory=True,
             enable_user_memories=True,
-            enable_session_summaries= True,
+            enable_session_summaries=True,
             
             debug_mode=True,
-            expected_output = """"
+            expected_output=""""
                 "📋 Bill of Quantities – FLOOR PLAN 1",
                 "Project Type: Residential",
                 "Floor: Ground Floor",
@@ -105,36 +105,90 @@ class BOQAgent(Agent):
 
                 "✅ All quantities are based on the available design data. No cost values are included."
             """
-
-
+        )
+    
+    async def generate_boq(self, data: str, user_id: str = None, session_id: str = None) -> Iterator[RunResponseEvent]:
+        """
+        Generate Bill of Quantities based on project data.
+        
+        Args:
+            data: Project data, specifications, or architectural information
+            user_id: User identifier for session management
+            session_id: Session identifier for conversation continuity
+            
+        Returns:
+            Iterator[RunResponseEvent]: Streaming response events with BOQ data
+        """
+        print(f"[DEBUG]: Generating BOQ with data: {data[:100]}..." if len(data) > 100 else data)
+        
+        try:
+            # Create the BOQ generation prompt
+            boq_prompt = f"""
+            Based on the following project data, generate a comprehensive Bill of Quantities following the expected output format:
+            
+            Project Data:
+            {data}
+            
+            Please follow the standard quantity surveying practices and provide detailed quantities for all construction elements as shown in the expected output format.
+            """
+            
+            # Generate BOQ using the agent's run method
+            response: Iterator[RunResponseEvent] = self.run(
+                boq_prompt,
+                user_id=user_id,
+                session_id=session_id,
+                stream=True
             )
-    
-    def generate_boq(self, data, user_id: str = None, session_id: str = None) -> Iterator[RunResponseEvent]:
-        # Placeholder for interview logic
-        print(f"[DEBUG]: Conducting interview with data: {data}")
+            
+            return response
+            
+        except Exception as e:
+            print(f"[ERROR] BOQ generation failed: {e}")
+            raise e
 
-        response: Iterator[RunResponseEvent] = self.run(data,
-                                                        user_id=user_id,
-                                                        session_id=session_id,
-                                                        stream=True)
-        # Here you would implement the actual interview logic, e.g., using conversation prompts
-        pprint_run_response(response, markdown=True)
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-if __name__ == "__main__":
+async def main():
+    """Async main function for testing the BOQ agent."""
     agent = BOQAgent()
     
+    print("🏗️ BOQ Agent - Async Mode")
+    print("Enter project data for BOQ generation (or type 'exit' to quit)")
+    print("-" * 50)
+    
     while True:
-        text = input("Enter text for the agent (or type 'exit' to quit): ")
-        if text.lower() == 'exit':
+        try:
+            # Use asyncio-compatible input
+            text = await asyncio.to_thread(input, "Enter project data: ")
+            
+            if text.lower() == 'exit':
+                print("Goodbye!")
+                break
+            
+            if not text.strip():
+                print("Please enter some project data.")
+                continue
+            
+            print(f"\n🔄 Generating BOQ...")
+            
+            # Generate BOQ asynchronously
+            response_generator = await agent.generate_boq(text)
+            
+            print("\n📋 BOQ Results:")
+            print("-" * 50)
+            
+            # Process streaming response using pprint_run_response
+            pprint_run_response(response_generator, markdown=True)
+            
+            print("\n" + "-" * 50)
+            print("✅ BOQ generation completed!")
+            print()
+            
+        except KeyboardInterrupt:
+            print("\n\nOperation cancelled by user. Goodbye!")
             break
-    # Assuming the image is a valid path, you would pass it to the agent's interview method
-        agent.generate_boq(text)
+        except Exception as e:
+            print(f"\n❌ Error: {e}")
+            print("Please try again with different input.\n")
+
+if __name__ == "__main__":
+    # Run the async main function
+    asyncio.run(main())
